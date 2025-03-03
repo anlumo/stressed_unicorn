@@ -43,7 +43,8 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   bool _showMentalButton = true;
   bool _showPhysicalButton = true;
-  static const stressButtonSize = 120.0;
+  static const stressButtonSize = 200.0;
+  static const stressButtonPadding = 32.0;
 
   @override
   Widget build(BuildContext context) {
@@ -62,35 +63,40 @@ class _MyHomePageState extends State<MyHomePage> {
               AnimatedCrossFade(
                 duration: const Duration(milliseconds: 300),
                 firstChild: SizedBox(
-                  width: stressButtonSize,
-                  height: stressButtonSize,
+                  width: stressButtonSize + stressButtonPadding,
+                  height: stressButtonSize + stressButtonPadding,
                   child: Center(
-                    child: FloatingActionButton.large(
-                      heroTag: mentalStressTag,
-                      onPressed: () async {
-                        setState(() {
-                          _showMentalButton = false;
-                        });
-                        await widget.database
-                            .into(widget.database.stressItems)
-                            .insert(
-                              StressItemsCompanion.insert(stressType: StressType.mental, createdAt: DateTime.now()),
-                            );
-                        await Future.delayed(Duration(seconds: 1));
-                        setState(() {
-                          if (context.mounted) {
-                            _showMentalButton = true;
-                          }
-                        });
-                      },
-                      tooltip: 'Mental Stress',
-                      child: const Icon(Icons.psychology, size: 60),
+                    child: SizedBox(
+                      width: stressButtonSize,
+                      height: stressButtonSize,
+                      child: FloatingActionButton.extended(
+                        heroTag: mentalStressTag,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+                        onPressed: () async {
+                          setState(() {
+                            _showMentalButton = false;
+                          });
+                          await widget.database
+                              .into(widget.database.stressItems)
+                              .insert(
+                                StressItemsCompanion.insert(stressType: StressType.mental, createdAt: DateTime.now()),
+                              );
+                          await Future.delayed(Duration(seconds: 1));
+                          setState(() {
+                            if (context.mounted) {
+                              _showMentalButton = true;
+                            }
+                          });
+                        },
+                        tooltip: 'Mental Stress',
+                        label: const Icon(Icons.psychology, size: 80),
+                      ),
                     ),
                   ),
                 ),
                 secondChild: SizedBox(
-                  width: stressButtonSize,
-                  height: stressButtonSize,
+                  width: stressButtonSize + stressButtonPadding,
+                  height: stressButtonSize + stressButtonPadding,
                   child: Icon(Icons.check, size: 60, color: theme.colorScheme.tertiary),
                 ),
                 crossFadeState: _showMentalButton ? CrossFadeState.showFirst : CrossFadeState.showSecond,
@@ -98,35 +104,40 @@ class _MyHomePageState extends State<MyHomePage> {
               AnimatedCrossFade(
                 duration: Duration(milliseconds: 300),
                 firstChild: SizedBox(
-                  width: stressButtonSize,
-                  height: stressButtonSize,
+                  width: stressButtonSize + stressButtonPadding,
+                  height: stressButtonSize + stressButtonPadding,
                   child: Center(
-                    child: FloatingActionButton.large(
-                      heroTag: physicalStressTag,
-                      onPressed: () async {
-                        setState(() {
-                          _showPhysicalButton = false;
-                        });
-                        await widget.database
-                            .into(widget.database.stressItems)
-                            .insert(
-                              StressItemsCompanion.insert(stressType: StressType.physical, createdAt: DateTime.now()),
-                            );
-                        await Future.delayed(Duration(seconds: 1));
-                        setState(() {
-                          if (context.mounted) {
-                            _showPhysicalButton = true;
-                          }
-                        });
-                      },
-                      tooltip: 'Physical Stress',
-                      child: const Icon(Icons.fitness_center, size: 60),
+                    child: SizedBox(
+                      width: stressButtonSize,
+                      height: stressButtonSize,
+                      child: FloatingActionButton.extended(
+                        heroTag: physicalStressTag,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+                        onPressed: () async {
+                          setState(() {
+                            _showPhysicalButton = false;
+                          });
+                          await widget.database
+                              .into(widget.database.stressItems)
+                              .insert(
+                                StressItemsCompanion.insert(stressType: StressType.physical, createdAt: DateTime.now()),
+                              );
+                          await Future.delayed(Duration(seconds: 1));
+                          setState(() {
+                            if (context.mounted) {
+                              _showPhysicalButton = true;
+                            }
+                          });
+                        },
+                        tooltip: 'Physical Stress',
+                        label: const Icon(Icons.woman_2, size: 80),
+                      ),
                     ),
                   ),
                 ),
                 secondChild: SizedBox(
-                  width: stressButtonSize,
-                  height: stressButtonSize,
+                  width: stressButtonSize + stressButtonPadding,
+                  height: stressButtonSize + stressButtonPadding,
                   child: Icon(Icons.check, size: 60, color: theme.colorScheme.tertiary),
                 ),
                 crossFadeState: _showPhysicalButton ? CrossFadeState.showFirst : CrossFadeState.showSecond,

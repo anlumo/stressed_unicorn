@@ -65,20 +65,20 @@ class _StatsScreenState extends State<StatsScreen> {
                 primaryXAxis: DateTimeAxis(intervalType: DateTimeIntervalType.days, dateFormat: DateFormat.yMd('de')),
                 primaryYAxis: NumericAxis(interval: 1),
                 tooltipBehavior: TooltipBehavior(enable: true),
-                legend: Legend(isVisible: true),
+                legend: Legend(isVisible: true, position: LegendPosition.right),
                 series: <CartesianSeries<({DateTime day, int mental, int physical}), DateTime>>[
                   BarSeries<({DateTime day, int mental, int physical}), DateTime>(
                     dataSource: query,
                     xValueMapper: (({DateTime day, int mental, int physical}) data, _) => data.day,
                     yValueMapper: (({DateTime day, int mental, int physical}) data, _) => data.physical,
-                    name: 'Physical Stress',
+                    name: 'Physical',
                     color: Colors.deepOrange,
                   ),
                   BarSeries<({DateTime day, int mental, int physical}), DateTime>(
                     dataSource: query,
                     xValueMapper: (({DateTime day, int mental, int physical}) data, _) => data.day,
                     yValueMapper: (({DateTime day, int mental, int physical}) data, _) => data.mental,
-                    name: 'Mental Stress',
+                    name: 'Mental',
                     color: Colors.deepPurple,
                   ),
                 ],
@@ -103,7 +103,7 @@ class _StatsScreenState extends State<StatsScreen> {
       ),
       floatingActionButton: Column(
         mainAxisSize: MainAxisSize.min,
-        spacing: 8,
+        spacing: 16,
         children: [
           FloatingActionButton(
             heroTag: mentalStressTag,
@@ -125,7 +125,7 @@ class _StatsScreenState extends State<StatsScreen> {
               await refreshDisplay();
             },
             tooltip: 'Physical Stress',
-            child: const Icon(Icons.fitness_center),
+            child: const Icon(Icons.woman_2),
           ),
         ],
       ),

@@ -10,26 +10,37 @@ class WeekSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: SegmentedButton(
-            segments: [
-              ButtonSegment<int>(value: 0, label: Text('Home')),
-              ButtonSegment<int>(value: 1, label: Text('1 week')),
-              ButtonSegment<int>(value: 4, label: Text('4 weeks')),
-              ButtonSegment<int>(value: 8, label: Text('8 weeks')),
-            ],
-            selected: {weeks},
-            onSelectionChanged: (weeks) {
-              onSelectionChanged(weeks.first);
-            },
-          ),
-        ),
+    final int selectedIndex;
+    switch (weeks) {
+      case 0:
+        selectedIndex = 0;
+      case 1:
+        selectedIndex = 1;
+      case 4:
+        selectedIndex = 2;
+      case 8:
+        selectedIndex = 3;
+      default:
+        selectedIndex = 0;
+    }
+
+    return NavigationBar(
+      selectedIndex: selectedIndex,
+      destinations: [
+        NavigationDestination(label: 'Home', icon: Icon(Icons.home)),
+        NavigationDestination(label: '1 week', icon: Icon(Icons.calendar_today)),
+        NavigationDestination(label: '4 weeks', icon: Icon(Icons.calendar_month)),
+        NavigationDestination(label: '8 weeks', icon: Icon(Icons.calendar_month)),
       ],
+      onDestinationSelected: (value) {
+        onSelectionChanged(switch (value) {
+          0 => 0,
+          1 => 1,
+          2 => 4,
+          3 => 8,
+          _ => 0,
+        });
+      },
     );
   }
 }
