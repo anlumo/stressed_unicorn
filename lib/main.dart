@@ -1,9 +1,9 @@
-import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:intl/intl.dart';
 import 'package:stressed_unicorn/database.dart';
-import 'package:syncfusion_flutter_charts/charts.dart';
+import 'package:stressed_unicorn/my_page_route.dart';
+import 'package:stressed_unicorn/stats.dart';
+import 'package:stressed_unicorn/week_selector.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -41,121 +41,112 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final ValueNotifier<List<({DateTime day, int mental, int physical})>> _query = ValueNotifier(const []);
-  int showWeeks = 1;
-
-  @override
-  void initState() {
-    super.initState();
-
-    refreshDisplay();
-  }
-
-  Future<void> refreshDisplay() async {
-    final oneWeekAgo = DateTime.now().subtract(Duration(days: 7 * showWeeks));
-    final select = widget.database.select(widget.database.stressItems)
-      ..where((tbl) => tbl.createdAt.isBiggerThanValue(oneWeekAgo));
-    final query = await select.get();
-    final daysSet =
-        query.map((entry) => DateTime(entry.createdAt.year, entry.createdAt.month, entry.createdAt.day)).toSet();
-    final days = daysSet.toList();
-    days.sort((a, b) => a.isAfter(b) ? 1 : -1);
-
-    _query.value = days
-        .map((day) {
-          final mentalCount =
-              query.where((entry) => entry.stressType == StressType.mental && entry.createdAt.day == day.day).length;
-          final physicalCount =
-              query.where((entry) => entry.stressType == StressType.physical && entry.createdAt.day == day.day).length;
-          return (day: day, mental: mentalCount, physical: physicalCount);
-        })
-        .toList(growable: false);
-  }
+  bool _showMentalButton = true;
+  bool _showPhysicalButton = true;
+  static const stressButtonSize = 120.0;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(backgroundColor: Theme.of(context).colorScheme.inversePrimary, title: Text('Stressed Unicorn')),
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-          child: ValueListenableBuilder(
-            valueListenable: _query,
-            builder: (context, query, _) {
-              return SfCartesianChart(
-                primaryXAxis: DateTimeAxis(intervalType: DateTimeIntervalType.days, dateFormat: DateFormat.yMd('de')),
-                primaryYAxis: NumericAxis(interval: 1),
-                tooltipBehavior: TooltipBehavior(enable: true),
-                legend: Legend(isVisible: true),
-                series: <CartesianSeries<({DateTime day, int mental, int physical}), DateTime>>[
-                  BarSeries<({DateTime day, int mental, int physical}), DateTime>(
-                    dataSource: query,
-                    xValueMapper: (({DateTime day, int mental, int physical}) data, _) => data.day,
-                    yValueMapper: (({DateTime day, int mental, int physical}) data, _) => data.physical,
-                    name: 'Physical Stress',
-                    color: Colors.deepOrange,
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            spacing: 64,
+            children: [
+              AnimatedCrossFade(
+                duration: const Duration(milliseconds: 300),
+                firstChild: SizedBox(
+                  width: stressButtonSize,
+                  height: stressButtonSize,
+                  child: Center(
+                    child: FloatingActionButton.large(
+                      heroTag: mentalStressTag,
+                      onPressed: () async {
+                        setState(() {
+                          _showMentalButton = false;
+                        });
+                        await widget.database
+                            .into(widget.database.stressItems)
+                            .insert(
+                              StressItemsCompanion.insert(stressType: StressType.mental, createdAt: DateTime.now()),
+                            );
+                        await Future.delayed(Duration(seconds: 1));
+                        setState(() {
+                          if (context.mounted) {
+                            _showMentalButton = true;
+                          }
+                        });
+                      },
+                      tooltip: 'Mental Stress',
+                      child: const Icon(Icons.psychology, size: 60),
+                    ),
                   ),
-                  BarSeries<({DateTime day, int mental, int physical}), DateTime>(
-                    dataSource: query,
-                    xValueMapper: (({DateTime day, int mental, int physical}) data, _) => data.day,
-                    yValueMapper: (({DateTime day, int mental, int physical}) data, _) => data.mental,
-                    name: 'Mental Stress',
-                    color: Colors.deepPurple,
+                ),
+                secondChild: SizedBox(
+                  width: stressButtonSize,
+                  height: stressButtonSize,
+                  child: Icon(Icons.check, size: 60, color: theme.colorScheme.tertiary),
+                ),
+                crossFadeState: _showMentalButton ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+              ),
+              AnimatedCrossFade(
+                duration: Duration(milliseconds: 300),
+                firstChild: SizedBox(
+                  width: stressButtonSize,
+                  height: stressButtonSize,
+                  child: Center(
+                    child: FloatingActionButton.large(
+                      heroTag: physicalStressTag,
+                      onPressed: () async {
+                        setState(() {
+                          _showPhysicalButton = false;
+                        });
+                        await widget.database
+                            .into(widget.database.stressItems)
+                            .insert(
+                              StressItemsCompanion.insert(stressType: StressType.physical, createdAt: DateTime.now()),
+                            );
+                        await Future.delayed(Duration(seconds: 1));
+                        setState(() {
+                          if (context.mounted) {
+                            _showPhysicalButton = true;
+                          }
+                        });
+                      },
+                      tooltip: 'Physical Stress',
+                      child: const Icon(Icons.fitness_center, size: 60),
+                    ),
                   ),
-                ],
-              );
-            },
+                ),
+                secondChild: SizedBox(
+                  width: stressButtonSize,
+                  height: stressButtonSize,
+                  child: Icon(Icons.check, size: 60, color: theme.colorScheme.tertiary),
+                ),
+                crossFadeState: _showPhysicalButton ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+              ),
+            ],
           ),
         ),
       ),
-      bottomNavigationBar: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: SegmentedButton(
-              segments: [
-                ButtonSegment<int>(value: 1, label: Text('1 week')),
-                ButtonSegment<int>(value: 4, label: Text('4 weeks')),
-                ButtonSegment<int>(value: 8, label: Text('8 weeks')),
-              ],
-              selected: {showWeeks},
-              onSelectionChanged: (weeks) {
-                setState(() {
-                  showWeeks = weeks.first;
-                  refreshDisplay();
-                });
-              },
-            ),
-          ),
-        ],
-      ),
-      floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
-        spacing: 8,
-        children: [
-          FloatingActionButton(
-            onPressed: () async {
-              await widget.database
-                  .into(widget.database.stressItems)
-                  .insert(StressItemsCompanion.insert(stressType: StressType.mental, createdAt: DateTime.now()));
-              await refreshDisplay();
-            },
-            tooltip: 'Mental Stress',
-            child: const Icon(Icons.psychology),
-          ),
-          FloatingActionButton(
-            onPressed: () async {
-              await widget.database
-                  .into(widget.database.stressItems)
-                  .insert(StressItemsCompanion.insert(stressType: StressType.physical, createdAt: DateTime.now()));
-              await refreshDisplay();
-            },
-            tooltip: 'Physical Stress',
-            child: const Icon(Icons.fitness_center),
-          ),
-        ],
+      bottomNavigationBar: WeekSelector(
+        weeks: 0,
+        database: widget.database,
+        onSelectionChanged: (weeks) {
+          if (weeks != 0) {
+            Navigator.of(context).push(
+              MyPageRoute(
+                builder: (BuildContext context) => StatsScreen(database: widget.database, initialWeeks: weeks),
+              ),
+            );
+          }
+        },
       ),
     );
   }
