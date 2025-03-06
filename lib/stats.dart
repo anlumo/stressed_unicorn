@@ -35,17 +35,30 @@ class _StatsScreenState extends State<StatsScreen> {
     final select = widget.database.select(widget.database.stressItems)
       ..where((tbl) => tbl.createdAt.isBiggerThanValue(oneWeekAgo));
     final query = await select.get();
-    final daysSet =
-        query.map((entry) => DateTime(entry.createdAt.year, entry.createdAt.month, entry.createdAt.day)).toSet();
-    final days = daysSet.toList();
-    days.sort((a, b) => a.isAfter(b) ? 1 : -1);
+    final days = Iterable.generate(7 * showWeeks, (day) => oneWeekAgo.add(Duration(days: 7 * showWeeks - day)));
 
     _query.value = days
         .map((day) {
           final mentalCount =
-              query.where((entry) => entry.stressType == StressType.mental && entry.createdAt.day == day.day).length;
+              query
+                  .where(
+                    (entry) =>
+                        entry.stressType == StressType.mental &&
+                        entry.createdAt.year == day.year &&
+                        entry.createdAt.month == day.month &&
+                        entry.createdAt.day == day.day,
+                  )
+                  .length;
           final physicalCount =
-              query.where((entry) => entry.stressType == StressType.physical && entry.createdAt.day == day.day).length;
+              query
+                  .where(
+                    (entry) =>
+                        entry.stressType == StressType.physical &&
+                        entry.createdAt.year == day.year &&
+                        entry.createdAt.month == day.month &&
+                        entry.createdAt.day == day.day,
+                  )
+                  .length;
           return (day: day, mental: mentalCount, physical: physicalCount);
         })
         .toList(growable: false);
@@ -73,6 +86,7 @@ class _StatsScreenState extends State<StatsScreen> {
                     yValueMapper: (({DateTime day, int mental, int physical}) data, _) => data.physical,
                     name: 'Physical',
                     color: Colors.deepOrange,
+                    animationDuration: 100,
                   ),
                   BarSeries<({DateTime day, int mental, int physical}), DateTime>(
                     dataSource: query,
@@ -80,6 +94,7 @@ class _StatsScreenState extends State<StatsScreen> {
                     yValueMapper: (({DateTime day, int mental, int physical}) data, _) => data.mental,
                     name: 'Mental',
                     color: Colors.deepPurple,
+                    animationDuration: 100,
                   ),
                 ],
               );
