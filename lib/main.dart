@@ -52,7 +52,6 @@ class _MyHomePageState extends State<MyHomePage> {
       body: LayoutBuilder(
         builder: (context, constraints) {
           final buttonHeight = (constraints.maxHeight / StressType.values.length).floorToDouble();
-          print('buttonHeight: $buttonHeight');
           return Column(
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
