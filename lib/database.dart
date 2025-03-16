@@ -54,4 +54,8 @@ class AppDatabase extends _$AppDatabase {
     });
     return json.length;
   }
+
+  Future<int> clear() {
+    return delete(stressItems).go();
+  }
 }

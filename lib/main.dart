@@ -60,12 +60,34 @@ class _MyHomePageState extends State<MyHomePage> {
           PopupMenuButton(
             position: PopupMenuPosition.under,
             itemBuilder:
-                (context) => [
+                (context) => <PopupMenuEntry<String>>[
+                  PopupMenuItem(value: 'clear', child: Text('Clear')),
+                  PopupMenuDivider(),
                   PopupMenuItem(value: 'import', child: Text('Import')),
                   PopupMenuItem(value: 'export', child: Text('Export')),
                 ],
             onSelected: (value) async {
               switch (value) {
+                case 'clear':
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder:
+                        (context) => AlertDialog(
+                          title: Text('Confirm Clear'),
+                          content: Text('Are you sure you want to clear the database? This action cannot be undone.'),
+                          actions: [
+                            TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text('Cancel')),
+                            TextButton(onPressed: () => Navigator.of(context).pop(true), child: Text('Clear')),
+                          ],
+                        ),
+                  );
+
+                  if (confirm == true) {
+                    final count = await widget.database.clear();
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$count entries deleted')));
+                    }
+                  }
                 case 'import':
                   final result = await FilePicker.platform.pickFiles(
                     dialogTitle: 'Import database',
