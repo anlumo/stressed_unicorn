@@ -1,4 +1,4 @@
-package com.example.stressed_unicorn
+package com.monitzer.stressed_unicorn
 
 import io.flutter.embedding.android.FlutterActivity
 

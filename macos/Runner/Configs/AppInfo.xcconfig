@@ -8,7 +8,7 @@
 PRODUCT_NAME = stressed_unicorn
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.example.stressedUnicorn
+PRODUCT_BUNDLE_IDENTIFIER = com.monitzer.stressedUnicorn
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2025 com.example. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2025 com.monitzer. All rights reserved.
