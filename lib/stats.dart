@@ -2,11 +2,9 @@ import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:stressed_unicorn/database.dart';
+import 'package:stressed_unicorn/stress_definition.dart';
 import 'package:stressed_unicorn/week_selector.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
-
-const mentalStressTag = Symbol('mental');
-const physicalStressTag = Symbol('physical');
 
 class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key, required this.database, required this.initialWeeks});
@@ -19,7 +17,7 @@ class StatsScreen extends StatefulWidget {
 }
 
 class _StatsScreenState extends State<StatsScreen> {
-  final ValueNotifier<List<({DateTime day, int mental, int physical})>> _query = ValueNotifier(const []);
+  final ValueNotifier<List<({DateTime day, Map<StressType, int> values})>> _query = ValueNotifier(const []);
   int showWeeks = 1;
 
   @override
@@ -39,27 +37,23 @@ class _StatsScreenState extends State<StatsScreen> {
 
     _query.value = days
         .map((day) {
-          final mentalCount =
-              query
-                  .where(
-                    (entry) =>
-                        entry.stressType == StressType.mental &&
-                        entry.createdAt.year == day.year &&
-                        entry.createdAt.month == day.month &&
-                        entry.createdAt.day == day.day,
-                  )
-                  .length;
-          final physicalCount =
-              query
-                  .where(
-                    (entry) =>
-                        entry.stressType == StressType.physical &&
-                        entry.createdAt.year == day.year &&
-                        entry.createdAt.month == day.month &&
-                        entry.createdAt.day == day.day,
-                  )
-                  .length;
-          return (day: day, mental: mentalCount, physical: physicalCount);
+          final values = Map.fromEntries(
+            StressType.values.map(
+              (stressType) => MapEntry(
+                stressType,
+                query
+                    .where(
+                      (entry) =>
+                          entry.stressType == stressType &&
+                          entry.createdAt.year == day.year &&
+                          entry.createdAt.month == day.month &&
+                          entry.createdAt.day == day.day,
+                    )
+                    .length,
+              ),
+            ),
+          );
+          return (day: day, values: values);
         })
         .toList(growable: false);
   }
@@ -75,28 +69,28 @@ class _StatsScreenState extends State<StatsScreen> {
             valueListenable: _query,
             builder: (context, query, _) {
               return SfCartesianChart(
-                primaryXAxis: DateTimeAxis(intervalType: DateTimeIntervalType.days, dateFormat: DateFormat.yMd('de')),
+                primaryXAxis: DateTimeAxis(
+                  intervalType: DateTimeIntervalType.days,
+                  dateFormat: DateFormat.yMEd('de'),
+                  isInversed: true,
+                  rangePadding: ChartRangePadding.none,
+                  labelAlignment: LabelAlignment.end,
+                ),
                 primaryYAxis: NumericAxis(interval: 1),
                 tooltipBehavior: TooltipBehavior(enable: true),
                 legend: Legend(isVisible: true, position: LegendPosition.right),
-                series: <CartesianSeries<({DateTime day, int mental, int physical}), DateTime>>[
-                  BarSeries<({DateTime day, int mental, int physical}), DateTime>(
-                    dataSource: query,
-                    xValueMapper: (({DateTime day, int mental, int physical}) data, _) => data.day,
-                    yValueMapper: (({DateTime day, int mental, int physical}) data, _) => data.physical,
-                    name: 'Physical',
-                    color: Colors.deepOrange,
-                    animationDuration: 100,
-                  ),
-                  BarSeries<({DateTime day, int mental, int physical}), DateTime>(
-                    dataSource: query,
-                    xValueMapper: (({DateTime day, int mental, int physical}) data, _) => data.day,
-                    yValueMapper: (({DateTime day, int mental, int physical}) data, _) => data.mental,
-                    name: 'Mental',
-                    color: Colors.deepPurple,
-                    animationDuration: 100,
-                  ),
-                ],
+                series: StressType.values
+                    .map(
+                      (ty) => BarSeries<({DateTime day, Map<StressType, int> values}), DateTime>(
+                        dataSource: query,
+                        xValueMapper: (({DateTime day, Map<StressType, int> values}) data, _) => data.day,
+                        yValueMapper: (({DateTime day, Map<StressType, int> values}) data, _) => data.values[ty] ?? 0,
+                        name: stressDefinition[ty]!.legendName,
+                        color: stressDefinition[ty]!.barColor,
+                        animationDuration: 100,
+                      ),
+                    )
+                    .toList(growable: false),
               );
             },
           ),
@@ -119,31 +113,22 @@ class _StatsScreenState extends State<StatsScreen> {
       floatingActionButton: Column(
         mainAxisSize: MainAxisSize.min,
         spacing: 16,
-        children: [
-          FloatingActionButton(
-            heroTag: mentalStressTag,
-            onPressed: () async {
-              await widget.database
-                  .into(widget.database.stressItems)
-                  .insert(StressItemsCompanion.insert(stressType: StressType.mental, createdAt: DateTime.now()));
-              await refreshDisplay();
-            },
-            tooltip: 'Mental Stress',
-            child: const Icon(Icons.psychology),
-          ),
-          FloatingActionButton(
-            heroTag: physicalStressTag,
-            onPressed: () async {
-              await widget.database
-                  .into(widget.database.stressItems)
-                  .insert(StressItemsCompanion.insert(stressType: StressType.physical, createdAt: DateTime.now()));
-              await refreshDisplay();
-            },
-            tooltip: 'Physical Stress',
-            child: const Icon(Icons.woman_2),
-          ),
-        ],
+        children: StressType.values.map((stressType) => _addButton(context, stressType)).toList(growable: false),
       ),
+    );
+  }
+
+  FloatingActionButton _addButton(BuildContext context, StressType stressType) {
+    return FloatingActionButton(
+      heroTag: stressDefinition[stressType]!.tag,
+      onPressed: () async {
+        await widget.database
+            .into(widget.database.stressItems)
+            .insert(StressItemsCompanion.insert(stressType: stressType, createdAt: DateTime.now()));
+        await refreshDisplay();
+      },
+      tooltip: stressDefinition[stressType]!.tooltip,
+      child: Icon(stressDefinition[stressType]!.icon),
     );
   }
 }

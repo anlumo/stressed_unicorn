@@ -3,6 +3,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:stressed_unicorn/database.dart';
 import 'package:stressed_unicorn/my_page_route.dart';
 import 'package:stressed_unicorn/stats.dart';
+import 'package:stressed_unicorn/stress_definition.dart';
 import 'package:stressed_unicorn/week_selector.dart';
 
 void main() async {
@@ -41,15 +42,12 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  bool _showMentalButton = true;
-  bool _showPhysicalButton = true;
-  static const stressButtonSize = 200.0;
+  final Map<StressType, bool> _showButton = {};
+  static const stressButtonSize = 180.0;
   static const stressButtonPadding = 32.0;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
       appBar: AppBar(backgroundColor: Theme.of(context).colorScheme.inversePrimary, title: Text('Stressed Unicorn')),
       body: Center(
@@ -59,90 +57,7 @@ class _MyHomePageState extends State<MyHomePage> {
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             spacing: 64,
-            children: [
-              AnimatedCrossFade(
-                duration: const Duration(milliseconds: 300),
-                firstChild: SizedBox(
-                  width: stressButtonSize + stressButtonPadding,
-                  height: stressButtonSize + stressButtonPadding,
-                  child: Center(
-                    child: SizedBox(
-                      width: stressButtonSize,
-                      height: stressButtonSize,
-                      child: FloatingActionButton.extended(
-                        heroTag: mentalStressTag,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
-                        onPressed: () async {
-                          setState(() {
-                            _showMentalButton = false;
-                          });
-                          await widget.database
-                              .into(widget.database.stressItems)
-                              .insert(
-                                StressItemsCompanion.insert(stressType: StressType.mental, createdAt: DateTime.now()),
-                              );
-                          await Future.delayed(Duration(seconds: 1));
-                          setState(() {
-                            if (context.mounted) {
-                              _showMentalButton = true;
-                            }
-                          });
-                        },
-                        tooltip: 'Mental Stress',
-                        label: const Icon(Icons.psychology, size: 80),
-                      ),
-                    ),
-                  ),
-                ),
-                secondChild: SizedBox(
-                  width: stressButtonSize + stressButtonPadding,
-                  height: stressButtonSize + stressButtonPadding,
-                  child: Icon(Icons.check, size: 60, color: theme.colorScheme.tertiary),
-                ),
-                crossFadeState: _showMentalButton ? CrossFadeState.showFirst : CrossFadeState.showSecond,
-              ),
-              AnimatedCrossFade(
-                duration: Duration(milliseconds: 300),
-                firstChild: SizedBox(
-                  width: stressButtonSize + stressButtonPadding,
-                  height: stressButtonSize + stressButtonPadding,
-                  child: Center(
-                    child: SizedBox(
-                      width: stressButtonSize,
-                      height: stressButtonSize,
-                      child: FloatingActionButton.extended(
-                        heroTag: physicalStressTag,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
-                        onPressed: () async {
-                          setState(() {
-                            _showPhysicalButton = false;
-                          });
-                          await widget.database
-                              .into(widget.database.stressItems)
-                              .insert(
-                                StressItemsCompanion.insert(stressType: StressType.physical, createdAt: DateTime.now()),
-                              );
-                          await Future.delayed(Duration(seconds: 1));
-                          setState(() {
-                            if (context.mounted) {
-                              _showPhysicalButton = true;
-                            }
-                          });
-                        },
-                        tooltip: 'Physical Stress',
-                        label: const Icon(Icons.woman_2, size: 80),
-                      ),
-                    ),
-                  ),
-                ),
-                secondChild: SizedBox(
-                  width: stressButtonSize + stressButtonPadding,
-                  height: stressButtonSize + stressButtonPadding,
-                  child: Icon(Icons.check, size: 60, color: theme.colorScheme.tertiary),
-                ),
-                crossFadeState: _showPhysicalButton ? CrossFadeState.showFirst : CrossFadeState.showSecond,
-              ),
-            ],
+            children: StressType.values.map((stressType) => _addButton(context, stressType)).toList(growable: false),
           ),
         ),
       ),
@@ -159,6 +74,50 @@ class _MyHomePageState extends State<MyHomePage> {
           }
         },
       ),
+    );
+  }
+
+  AnimatedCrossFade _addButton(BuildContext context, StressType stressType) {
+    final theme = Theme.of(context);
+
+    return AnimatedCrossFade(
+      duration: Duration(milliseconds: 300),
+      firstChild: SizedBox(
+        width: stressButtonSize + stressButtonPadding,
+        height: stressButtonSize + stressButtonPadding,
+        child: Center(
+          child: SizedBox(
+            width: stressButtonSize,
+            height: stressButtonSize,
+            child: FloatingActionButton.extended(
+              heroTag: stressDefinition[stressType]!.tag,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+              onPressed: () async {
+                setState(() {
+                  _showButton[stressType] = false;
+                });
+                await widget.database
+                    .into(widget.database.stressItems)
+                    .insert(StressItemsCompanion.insert(stressType: stressType, createdAt: DateTime.now()));
+                await Future.delayed(Duration(seconds: 1));
+                setState(() {
+                  if (context.mounted) {
+                    _showButton[stressType] = true;
+                  }
+                });
+              },
+              tooltip: stressDefinition[stressType]!.tooltip,
+              label: Icon(stressDefinition[stressType]!.icon, size: 80),
+            ),
+          ),
+        ),
+      ),
+      secondChild: SizedBox(
+        width: stressButtonSize + stressButtonPadding,
+        height: stressButtonSize + stressButtonPadding,
+        child: Icon(Icons.check, size: 60, color: theme.colorScheme.tertiary),
+      ),
+      crossFadeState: (_showButton[stressType] ?? true) ? CrossFadeState.showFirst : CrossFadeState.showSecond,
     );
   }
 }
