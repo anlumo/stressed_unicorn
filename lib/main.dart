@@ -91,9 +91,9 @@ class _MyHomePageState extends State<MyHomePage> {
           child: Padding(
             padding: const EdgeInsets.all(stressButtonPadding),
             child: Hero(
-              tag: stressDefinition[stressType]!.tag,
+              tag: stressType.tag,
               child: Tooltip(
-                message: stressDefinition[stressType]!.tooltip,
+                message: stressType.tooltip,
                 child: FilledButton.tonalIcon(
                   style: FilledButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32))),
                   onPressed: () async {
@@ -110,7 +110,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       }
                     });
                   },
-                  label: Icon(stressDefinition[stressType]!.icon, size: stressButtonSize * 0.4),
+                  label: Icon(stressType.icon, size: stressButtonSize * 0.4),
                 ),
               ),
             ),

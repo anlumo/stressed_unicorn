@@ -85,12 +85,13 @@ class _StatsScreenState extends State<StatsScreen> {
                 legend: Legend(isVisible: true, position: LegendPosition.right),
                 series: StressType.values
                     .map(
-                      (ty) => BarSeries<({DateTime day, Map<StressType, int> values}), DateTime>(
+                      (stressType) => BarSeries<({DateTime day, Map<StressType, int> values}), DateTime>(
                         dataSource: query,
                         xValueMapper: (({DateTime day, Map<StressType, int> values}) data, _) => data.day,
-                        yValueMapper: (({DateTime day, Map<StressType, int> values}) data, _) => data.values[ty] ?? 0,
-                        name: stressDefinition[ty]!.legendName,
-                        color: stressDefinition[ty]!.barColor,
+                        yValueMapper:
+                            (({DateTime day, Map<StressType, int> values}) data, _) => data.values[stressType] ?? 0,
+                        name: stressType.legendName,
+                        color: stressType.barColor,
                         animationDuration: 100,
                       ),
                     )
@@ -124,15 +125,15 @@ class _StatsScreenState extends State<StatsScreen> {
 
   FloatingActionButton _addButton(BuildContext context, StressType stressType) {
     return FloatingActionButton(
-      heroTag: stressDefinition[stressType]!.tag,
+      heroTag: stressType.tag,
       onPressed: () async {
         await widget.database
             .into(widget.database.stressItems)
             .insert(StressItemsCompanion.insert(stressType: stressType, createdAt: DateTime.now()));
         await refreshDisplay();
       },
-      tooltip: stressDefinition[stressType]!.tooltip,
-      child: Icon(stressDefinition[stressType]!.icon),
+      tooltip: stressType.tooltip,
+      child: Icon(stressType.icon),
     );
   }
 }
