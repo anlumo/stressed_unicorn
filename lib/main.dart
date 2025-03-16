@@ -9,7 +9,7 @@ import 'package:stressed_unicorn/week_selector.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await initializeDateFormatting('de', null);
+  await initializeDateFormatting(null, null);
 
   final database = AppDatabase();
 

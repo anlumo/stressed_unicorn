@@ -75,7 +75,7 @@ class _StatsScreenState extends State<StatsScreen> {
               return SfCartesianChart(
                 primaryXAxis: DateTimeAxis(
                   intervalType: DateTimeIntervalType.days,
-                  dateFormat: DateFormat.yMEd('de'),
+                  dateFormat: DateFormat.yMEd(),
                   isInversed: true,
                   rangePadding: ChartRangePadding.none,
                   labelAlignment: LabelAlignment.end,
